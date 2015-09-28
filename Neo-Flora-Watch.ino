@@ -119,9 +119,11 @@ if (start == true) {
     }
   }
   // approximately every 60 seconds or so, update time
-  if ((millis() - timer > 60000)) {
+  if ((millis() - timer) > 60000) 
+  {
     timer = millis(); // reset the timer
-    if (GPS.fix) {
+    if (GPS.fix) 
+    {
       // set the Time to the latest GPS reading
       setTime(GPS.hour, GPS.minute, GPS.seconds, GPS.day, GPS.month, GPS.year);
       delay(50);
@@ -137,11 +139,7 @@ if (start == true) {
     {
       hr = hr - 12;
     }
-  if (hr != 0 && mn != 0 && sc != 0)
-  {
-    strip.setPixelColor(0, strip.Color(10, 20, 10));
-    strip.show();
-  }
+  
   if (hr == mn && hr == sc)
   {
     strip.setPixelColor(hrc, strip.Color(0, 0, 0));
@@ -191,6 +189,11 @@ if (start == true) {
     strip.setPixelColor(scc, strip.Color(0, 0, 0));
     strip.setPixelColor(sc, strip.Color(0, 20, 0));
     scc = sc;
+    strip.show();
+  }
+  if (hr != 0 && mn != 0 && sc != 0)
+  {
+    strip.setPixelColor(0, strip.Color(10, 20, 10));
     strip.show();
   }
   Serial.println("Hour:");
