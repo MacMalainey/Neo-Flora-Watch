@@ -10,7 +10,7 @@ int mn;
 int sc;
 int mnc = 100;
 int scc = 100;
-
+int start = 0;
 //HardwareSerial Serial = Serial1;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(12, 6, NEO_GRB + NEO_KHZ800);
 
@@ -26,7 +26,6 @@ int offset = -6;
 // off by default!
 boolean usingInterrupt = false;
 void useInterrupt(boolean); // Func prototype keeps Arduino 0023 happy
-boolean start;
 void setup()  
 {
   // connect at 115200 so we can read the GPS fast enough and echo without dropping chars
@@ -61,7 +60,6 @@ void setup()
   Serial1.println(PMTK_Q_RELEASE);
   strip.begin();
   strip.show();
-  start = true;
 }
 
 
@@ -90,8 +88,7 @@ void useInterrupt(boolean v) {
     usingInterrupt = false;
   }
 }
-
-uint32_t timer = millis();
+uint32_t gpsTimer = millis();
 void loop()                     // run over and over again
 {
   
@@ -105,29 +102,27 @@ void loop()                     // run over and over again
     if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
       return;  // we can fail to parse a sentence in which case we should just wait for another
   }
-  // if millis() or timer wraps around, we'll just reset it
-  if (timer > millis())  timer = millis();
+  if (gpsTimer > millis()) gpsTimer = millis();
 
-if (start == true) {
+  if (start == 0) {
     if (GPS.fix) {
       // set the Time to the latest GPS reading
       setTime(GPS.hour, GPS.minute, GPS.seconds, GPS.day, GPS.month, GPS.year);
       delay(50);
       adjustTime(offset * SECS_PER_HOUR);
       delay(500);
-      start = false;
+      start = 1;
     }
-  }
+  }    
   // approximately every 60 seconds or so, update time
-  if ((millis() - timer) > 60000) 
-  {
-    timer = millis(); // reset the timer
-    if (GPS.fix) 
-    {
+  if ((millis() - gpsTimer > 60000) && (start == 1)) {
+    gpsTimer = millis(); // reset the timer
+    if (GPS.fix) {
       // set the Time to the latest GPS reading
       setTime(GPS.hour, GPS.minute, GPS.seconds, GPS.day, GPS.month, GPS.year);
       delay(50);
       adjustTime(offset * SECS_PER_HOUR);
+      delay(500);
     }
   }
   hr = (hour());
@@ -139,7 +134,6 @@ if (start == true) {
     {
       hr = hr - 12;
     }
-  
   if (hr == mn && hr == sc)
   {
     strip.setPixelColor(hrc, strip.Color(0, 0, 0));
@@ -202,7 +196,6 @@ if (start == true) {
   Serial.println(mn);
   Serial.println("Second:");
   Serial.println(sc);
-  delay(100);
 }
   
   
