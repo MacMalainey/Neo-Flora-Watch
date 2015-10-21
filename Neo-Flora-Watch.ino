@@ -11,17 +11,17 @@ int sc;
 int mnc = 100;
 int scc = 100;
 int start = 0;
+int tempO;
+boolean below0;
 #define tempPin A9
 //HardwareSerial Serial = Serial1;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(12, 6, NEO_GRB + NEO_KHZ800);
-
+int chec;
 Adafruit_GPS GPS(&Serial1);
 //CHANGE FOR TIME ZONE
 int offset = -6;
-
-// Set GPSECHO to 'false' to turn off echoing the GPS data to the Serial console
-// Set to 'true' if you want to debug and listen to the raw GPS sentences. 
-#define TMECHO  true
+int mode = 1;
+#define buttonPin 10
 
 // this keeps track of whether we're using the interrupt
 // off by default!
@@ -61,6 +61,9 @@ void setup()
   Serial1.println(PMTK_Q_RELEASE);
   strip.begin();
   strip.show();
+  // Make input & enable pull-up resistors on switch pins for pushbutton
+  pinMode(buttonPin, INPUT);
+  digitalWrite(buttonPin, HIGH);
 }
 
 
@@ -90,10 +93,10 @@ void useInterrupt(boolean v) {
   }
 }
 uint32_t gpsTimer = millis();
-void loop()                     // run over and over again
-{
   
-  // if a sentence is received, we can check the checksum, parse it...
+int LEDclock()
+{
+   // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) {
     // a tricky thing here is if we print the NMEA sentence, or data
     // we end up not listening and catching other sentences! 
@@ -101,7 +104,7 @@ void loop()                     // run over and over again
     //Serial.println(GPS.lastNMEA());   // this also sets the newNMEAreceived() flag to false
   
     if (!GPS.parse(GPS.lastNMEA()))   // this also sets the newNMEAreceived() flag to false
-      return;  // we can fail to parse a sentence in which case we should just wait for another
+      return 1;  // we can fail to parse a sentence in which case we should just wait for another
   }
   if (gpsTimer > millis()) gpsTimer = millis();
 
@@ -191,7 +194,27 @@ void loop()                     // run over and over again
     strip.setPixelColor(0, strip.Color(10, 20, 10));
     strip.show();
   }
-//getting the voltage reading from the temperature sensor
+  Serial.println("Hour:");
+  Serial.println(hr);
+  Serial.println("Minute:");
+  Serial.println(mn);
+  Serial.println("Second:");
+  Serial.println(sc); 
+  int buttonState = digitalRead(buttonPin);
+  if (buttonState == LOW)
+  {
+    delay(1000);
+    return 0;
+  }
+  else
+  {
+    return 1;
+  }
+  
+}
+int LEDtemp()
+{
+  //getting the voltage reading from the temperature sensor
  int reading = analogRead(tempPin);  
  
  // converting that reading to voltage, for 3.3v arduino use 3.3
@@ -202,12 +225,78 @@ void loop()                     // run over and over again
  float temperatureC = (voltage - 0.5) * 100 ;  //converting from 10 mv per degree wit 500 mV offset
                                                //to degrees ((voltage - 500mV) times 100)
  Serial.print(temperatureC); Serial.println(" degrees C");
-  Serial.println("Hour:");
-  Serial.println(hr);
-  Serial.println("Minute:");
-  Serial.println(mn);
-  Serial.println("Second:");
-  Serial.println(sc);
+ int tempD = temperatureC / 4;
+ Serial.println(tempD);
+ if (tempD < 0)
+ {
+  tempD = tempD * -1;
+  below0 = true;
+ }
+ else
+ {
+  below0 = false;
+ }
+ if (tempD != tempO)
+ {
+  tempO = tempD;
+  for (int ledOn = 0; ledOn < tempD; ledOn++)
+  {
+    if (below0 == true)
+    {
+      strip.setPixelColor(ledOn, strip.Color(5, 5, 20));
+     strip.show();
+    }
+    else
+    {
+     strip.setPixelColor(ledOn, strip.Color(20, 5, 0));
+     strip.show();
+    }
+  }
+  for (int ledOn = 11; ledOn > tempD; ledOn--)
+  {
+     strip.setPixelColor(ledOn, strip.Color(0, 0, 0));
+    strip.show();
+  }
+ }
+ int buttonState = digitalRead(buttonPin);
+  if (buttonState == LOW)
+  {
+    delay(1000);
+    return 1;
+  }
+  else
+  {
+    return 0;
+  }
+}
+void loop()                     // run over and over again
+{
+  if (mode == 0)
+  {
+    if (chec != mode)
+    {
+      for (int ledOn = 0; ledOn <= 12; ledOn++)
+      {
+      strip.setPixelColor(ledOn, strip.Color(0, 0, 0));
+      strip.show();
+      chec = mode;
+      }
+    }
+    mode = LEDtemp();
+  }
+  else if (mode == 1)
+  {
+    if (chec != mode)
+    {
+      for (int ledOn = 0; ledOn <= 12; ledOn++)
+      {
+      strip.setPixelColor(ledOn, strip.Color(0, 0, 0));
+      strip.show();
+      chec = mode;
+      }
+    }
+    mode = LEDclock();
+  }
 }
   
   
