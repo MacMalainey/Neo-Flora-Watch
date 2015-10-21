@@ -11,6 +11,7 @@ int sc;
 int mnc = 100;
 int scc = 100;
 int start = 0;
+#define tempPin A9
 //HardwareSerial Serial = Serial1;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(12, 6, NEO_GRB + NEO_KHZ800);
 
@@ -190,6 +191,17 @@ void loop()                     // run over and over again
     strip.setPixelColor(0, strip.Color(10, 20, 10));
     strip.show();
   }
+//getting the voltage reading from the temperature sensor
+ int reading = analogRead(tempPin);  
+ 
+ // converting that reading to voltage, for 3.3v arduino use 3.3
+ float voltage = reading * 3.3;
+ voltage /= 1024.0;
+ 
+ // now print out the temperature
+ float temperatureC = (voltage - 0.5) * 100 ;  //converting from 10 mv per degree wit 500 mV offset
+                                               //to degrees ((voltage - 500mV) times 100)
+ Serial.print(temperatureC); Serial.println(" degrees C");
   Serial.println("Hour:");
   Serial.println(hr);
   Serial.println("Minute:");
