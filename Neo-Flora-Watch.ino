@@ -19,7 +19,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(12, 6, NEO_GRB + NEO_KHZ800);
 int chec;
 Adafruit_GPS GPS(&Serial1);
 //CHANGE FOR TIME ZONE
-int offset = -6;
+int offset = -7;
 int mode = 1;
 #define buttonPin 10
 
@@ -94,7 +94,7 @@ void useInterrupt(boolean v) {
 }
 uint32_t gpsTimer = millis();
   
-int LEDclock()
+int LEDclock(boolean clocknew)
 {
    // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) {
@@ -134,10 +134,18 @@ int LEDclock()
   sc = (second());
   mn = mn / 5;
   sc = sc / 5;
-  if (hr > 12)
+
+  if (hr >= 12)
     {
       hr = hr - 12;
     }
+  if (clocknew == true){
+    strip.setPixelColor(0, strip.Color(10, 10, 10));
+    strip.setPixelColor(sc, strip.Color(0, 20, 0));
+    strip.setPixelColor(mn, strip.Color(0, 0, 20));
+    strip.setPixelColor(hr, strip.Color(20, 0, 0));
+    strip.show();
+  }
   if (hr == mn && hr == sc)
   {
     strip.setPixelColor(hrc, strip.Color(0, 0, 0));
@@ -191,7 +199,7 @@ int LEDclock()
   }
   if (hr != 0 && mn != 0 && sc != 0)
   {
-    strip.setPixelColor(0, strip.Color(10, 20, 10));
+    strip.setPixelColor(0, strip.Color(10, 10, 10));
     strip.show();
   }
   Serial.println("Hour:");
@@ -212,7 +220,7 @@ int LEDclock()
   }
   
 }
-int LEDtemp()
+int LEDtemp(boolean tempnew)
 {
   //getting the voltage reading from the temperature sensor
  int reading = analogRead(tempPin);  
@@ -236,7 +244,7 @@ int LEDtemp()
  {
   below0 = false;
  }
- if (tempD != tempO)
+ if (tempD != tempO or tempnew == true)
  {
   tempO = tempD;
   for (int ledOn = 0; ledOn < tempD; ledOn++)
@@ -280,9 +288,13 @@ void loop()                     // run over and over again
       strip.setPixelColor(ledOn, strip.Color(0, 0, 0));
       strip.show();
       chec = mode;
+      mode = LEDtemp(true);
       }
     }
-    mode = LEDtemp();
+    else
+    {
+   		mode = LEDtemp(false);
+    }
   }
   else if (mode == 1)
   {
@@ -293,9 +305,13 @@ void loop()                     // run over and over again
       strip.setPixelColor(ledOn, strip.Color(0, 0, 0));
       strip.show();
       chec = mode;
+      mode = LEDclock(true);
       }
     }
-    mode = LEDclock();
+    else
+    {
+			mode = LEDclock(false);
+    }
   }
 }
   
