@@ -21,7 +21,7 @@ Adafruit_GPS GPS(&Serial1);
 //CHANGE FOR TIME ZONE
 int offset = -7;
 int mode = 1;
-#define buttonPin 10
+#define buttonPin 12
 
 // this keeps track of whether we're using the interrupt
 // off by default!
@@ -228,7 +228,6 @@ int LEDtemp(boolean tempnew)
  // converting that reading to voltage, for 3.3v arduino use 3.3
  float voltage = reading * 3.3;
  voltage /= 1024.0;
- 
  // now print out the temperature
  float temperatureC = (voltage - 0.5) * 100 ;  //converting from 10 mv per degree wit 500 mV offset
                                                //to degrees ((voltage - 500mV) times 100)
@@ -238,7 +237,7 @@ int LEDtemp(boolean tempnew)
  if (tempD < 0)
  {
   tempD = tempD * -1;
-  below0 = true;
+   below0 = true;
  }
  else
  {
