@@ -13,6 +13,7 @@ int scc = 100;
 int start = 0;
 int tempO;
 boolean below0;
+boolean belowChec;
 #define tempPin A9
 //HardwareSerial Serial = Serial1;
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(12, 6, NEO_GRB + NEO_KHZ800);
@@ -58,12 +59,20 @@ void setup()
   useInterrupt(true);
   delay(1000);
   // Ask for firmware version
+  start = 0;
   Serial1.println(PMTK_Q_RELEASE);
   strip.begin();
   strip.show();
   // Make input & enable pull-up resistors on switch pins for pushbutton
   pinMode(buttonPin, INPUT);
   digitalWrite(buttonPin, HIGH);
+  for (int ledOn = 0; ledOn <= 11; ledOn++)
+  {
+    delay(200);
+  	strip.setPixelColor(ledOn, strip.Color(0, 11, ledOn));
+    strip.show();
+  }
+  delay(200);
 }
 
 
@@ -94,7 +103,7 @@ void useInterrupt(boolean v) {
 }
 uint32_t gpsTimer = millis();
   
-int LEDclock(boolean clocknew)
+int LEDclock(boolean clocknew, int start)
 {
    // if a sentence is received, we can check the checksum, parse it...
   if (GPS.newNMEAreceived()) {
@@ -232,9 +241,9 @@ int LEDtemp(boolean tempnew)
  float temperatureC = (voltage - 0.5) * 100 ;  //converting from 10 mv per degree wit 500 mV offset
                                                //to degrees ((voltage - 500mV) times 100)
  Serial.print(temperatureC); Serial.println(" degrees C");
- int tempD = temperatureC / 4;
+ int tempD = temperatureC / 3;
  Serial.println(tempD);
- if (tempD < 0)
+ if (temperatureC < 0)
  {
   tempD = tempD * -1;
    below0 = true;
@@ -243,7 +252,7 @@ int LEDtemp(boolean tempnew)
  {
   below0 = false;
  }
- if (tempD != tempO or tempnew == true)
+ if (tempD != tempO or tempnew == true or belowChec != below0)
  {
   tempO = tempD;
   for (int ledOn = 0; ledOn < tempD; ledOn++)
@@ -264,6 +273,7 @@ int LEDtemp(boolean tempnew)
      strip.setPixelColor(ledOn, strip.Color(0, 0, 0));
     strip.show();
   }
+  belowChec = below0;
  }
  int buttonState = digitalRead(buttonPin);
   if (buttonState == LOW)
@@ -282,7 +292,7 @@ void loop()                     // run over and over again
   {
     if (chec != mode)
     {
-      for (int ledOn = 0; ledOn <= 12; ledOn++)
+      for (int ledOn = 0; ledOn <= 11; ledOn++)
       {
       strip.setPixelColor(ledOn, strip.Color(0, 0, 0));
       strip.show();
@@ -299,19 +309,20 @@ void loop()                     // run over and over again
   {
     if (chec != mode)
     {
-      for (int ledOn = 0; ledOn <= 12; ledOn++)
+      for (int ledOn = 0; ledOn <= 11; ledOn++)
       {
       strip.setPixelColor(ledOn, strip.Color(0, 0, 0));
       strip.show();
       chec = mode;
-      mode = LEDclock(true);
+      mode = LEDclock(true, start);
       }
     }
     else
     {
-			mode = LEDclock(false);
+		mode = LEDclock(false, start);
     }
   }
+  start = 1;
 }
   
   
